@@ -125,7 +125,7 @@
           return;
         }
         setStatus('正在为当前网页准备 TNT…');
-        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['settings.js', 'background-image.js', 'engine.js', 'content.js'] });
+        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['settings.js', 'background-image.js', 'engine.js', 'audio.js', 'content.js'] });
         response = await send(type);
       }
       if (response && response.ok === false) throw new Error(response.error || response.message || '操作未完成，请稍后再试。');

@@ -1,10 +1,10 @@
 {
   "name": "tnt-page-blast",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": true,
   "description": "Browser-first TNT overlay with a portable screenshot fragment renderer",
   "scripts": {
-    "test": "node --test tests/engine.test.cjs tests/background.test.cjs tests/settings.test.cjs tests/controller.test.cjs tests/popup.test.cjs tests/visual.test.cjs tests/distribution.test.cjs tests/background-image.test.cjs",
+    "test": "node --test tests/engine.test.cjs tests/background.test.cjs tests/settings.test.cjs tests/controller.test.cjs tests/popup.test.cjs tests/visual.test.cjs tests/distribution.test.cjs tests/background-image.test.cjs tests/audio.test.cjs",
     "test:browser": "node tests/browser.test.cjs",
     "demo": "python -m http.server 8765"
   },

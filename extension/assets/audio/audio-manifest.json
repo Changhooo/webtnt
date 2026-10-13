@@ -1,0 +1,52 @@
+{
+  "format": "WAV / stereo PCM16 / 48000 Hz",
+  "license": "MIT; see the repository LICENSE",
+  "copyright": "Copyright (c) 2026 TNT Blast contributors",
+  "source": "Original WebTNT promotional film sound effects; procedural synthesis; no external audio or music",
+  "promo_event_seconds": {
+    "drop": 2.85,
+    "blast": 3.7447,
+    "restore": 5.945
+  },
+  "original_seed": 20261013,
+  "generator": "tools/generate_audio.py",
+  "finishing": {
+    "ignite.wav": "0.5 ms attack and 5 ms release fade",
+    "fuse.wav": "Separate ignition removed; 60 ms equal-power loop crossfade; no silence padding",
+    "blast.wav": "0.5 ms attack and 35 ms release fade; original asymmetric debris preserved",
+    "restore.wav": "Includes original 40 ms lead-in swoop; 45 ms tail fade; 25 ms terminal silence"
+  },
+  "loopable": [
+    "fuse.wav"
+  ],
+  "files": [
+    {
+      "file": "ignite.wav",
+      "duration_seconds": 0.045,
+      "sample_peak_dbfs": -7.537,
+      "rms_dbfs": -27.864,
+      "sha256": "4bc5b51bf76698dfa739d07200250765035512b704a46cfd90f106f89dffbe3e"
+    },
+    {
+      "file": "fuse.wav",
+      "duration_seconds": 0.789708,
+      "sample_peak_dbfs": -15.064,
+      "rms_dbfs": -29.926,
+      "sha256": "2b6d2566ac4d29565c18e31ea566c17e4c9f3bcedbc82a9817a71aa62401225d"
+    },
+    {
+      "file": "blast.wav",
+      "duration_seconds": 1.3,
+      "sample_peak_dbfs": -2.645,
+      "rms_dbfs": -21.097,
+      "sha256": "e9317e7a1c467235b20ef2d43e0253c6246a2fe584441eeb1fe1585b136eb063"
+    },
+    {
+      "file": "restore.wav",
+      "duration_seconds": 0.675,
+      "sample_peak_dbfs": -17.762,
+      "rms_dbfs": -32.953,
+      "sha256": "69049e8c1a40aaaf27a256cc60472ae4be45b043754ec47ac877b2f873a08090"
+    }
+  ]
+}

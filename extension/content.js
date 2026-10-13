@@ -27,7 +27,8 @@
       this.settings = {...TNTSettings.defaults};
       this.phase = 'idle'; this.shown = true; this.destroyed = false; this.epoch = 0;
       this.x = Math.max(50, innerWidth - 96); this.y = Math.max(55, Math.min(innerHeight - 110, 160));
-      this.events = new AbortController(); this.audio = null; this.audioNodes = [];
+      this.events = new AbortController();
+      this.soundPlayer = new TNTAudio.Player({resolveURL: filename => chrome.runtime.getURL('assets/audio/'+filename)});
       this.backgroundAsset=null; this.backgroundBitmap=null; this.backgroundEpoch=0; this.backgroundReady=Promise.resolve();
       this.suppressContextMenuUntil=0;
       this.host = document.createElement('div');
@@ -36,7 +37,7 @@
       // Screenshot pixels may contain cross-origin frames: keep the render surface
       // inaccessible to the host page while the isolated extension world owns it.
       this.shadow = this.host.attachShadow({mode:'closed'});
-      this.shadow.innerHTML = `<style>${CSS}</style><div class="scene"><canvas aria-hidden="true"></canvas><button class="tnt" title="右键拖动移动 · 左键拖动选择爆点，图标保持原位 · 单独右击菜单" aria-label="TNT：右键拖动移动，左键拖动松开引爆，原图标位置不变"><img alt="" draggable="false"><span class="ember" hidden></span><span class="hint">右键移动 · 左键选择爆点</span></button><div class="target-preview" aria-hidden="true" hidden><img alt="" draggable="false"><span class="ember" hidden></span><span class="hint">松开在此引爆</span></div><nav class="dock" aria-label="TNT 工具" hidden><button data-action="restore" title="立即还原（Esc）" aria-label="立即还原">↶</button><button data-action="settings" title="设置" aria-label="设置">⚙</button><button data-action="hints" title="隐藏提示文字" aria-label="隐藏提示文字" aria-pressed="false">文</button><button data-action="hide" title="隐藏 TNT" aria-label="隐藏 TNT">−</button><button data-action="close" class="danger" title="关闭工具" aria-label="关闭工具">×</button></nav><section class="panel" aria-label="爆炸设置" hidden><header>爆炸设置<button data-action="settings" aria-label="关闭设置">×</button></header><div class="controls"></div><label class="row"><span>点燃与爆炸音效</span><input type="checkbox" data-setting="sound"></label><label class="row"><span>显示 TNT 下方提示文字</span><input type="checkbox" data-setting="showHints"></label><small>点击工具栏 TNT 图标选择自定义背景图片<br>按 Esc 立即还原</small></section><div class="toast" role="status" hidden></div></div>`;
+      this.shadow.innerHTML = `<style>${CSS}</style><div class="scene"><canvas aria-hidden="true"></canvas><button class="tnt" title="右键拖动移动 · 左键拖动选择爆点，图标保持原位 · 单独右击菜单" aria-label="TNT：右键拖动移动，左键拖动松开引爆，原图标位置不变"><img alt="" draggable="false"><span class="ember" hidden></span><span class="hint">右键移动 · 左键选择爆点</span></button><div class="target-preview" aria-hidden="true" hidden><img alt="" draggable="false"><span class="ember" hidden></span><span class="hint">松开在此引爆</span></div><nav class="dock" aria-label="TNT 工具" hidden><button data-action="restore" title="立即还原（Esc）" aria-label="立即还原">↶</button><button data-action="settings" title="设置" aria-label="设置">⚙</button><button data-action="hints" title="隐藏提示文字" aria-label="隐藏提示文字" aria-pressed="false">文</button><button data-action="hide" title="隐藏 TNT" aria-label="隐藏 TNT">−</button><button data-action="close" class="danger" title="关闭工具" aria-label="关闭工具">×</button></nav><section class="panel" aria-label="爆炸设置" hidden><header>爆炸设置<button data-action="settings" aria-label="关闭设置">×</button></header><div class="controls"></div><label class="row"><span>点燃、爆炸与回吸音效</span><input type="checkbox" data-setting="sound"></label><label class="row"><span>显示 TNT 下方提示文字</span><input type="checkbox" data-setting="showHints"></label><small>点击工具栏 TNT 图标选择自定义背景图片<br>按 Esc 立即还原</small></section><div class="toast" role="status" hidden></div></div>`;
       this.button = this.shadow.querySelector('.tnt'); this.canvas = this.shadow.querySelector('canvas');
       this.dock = this.shadow.querySelector('.dock'); this.panel = this.shadow.querySelector('.panel');
       this.targetPreview=this.shadow.querySelector('.target-preview');
@@ -50,6 +51,7 @@
       }).catch(() => this.syncSettings());
     }
     setPhase(phase) {
+      const previous=this.phase;
       this.phase = phase; this.host.dataset.phase = phase;
       const remote=this.detonationCenter && Math.hypot(this.detonationCenter.x-this.x,this.detonationCenter.y-this.y)>8;
       const preparing=phase==='fuse' || phase==='capture';
@@ -63,6 +65,10 @@
         this.targetPreview.querySelector('.ember').hidden=false;
         this.targetPreview.querySelector('.hint').textContent=phase==='fuse'?'引线燃烧中':'准备画面…';
       } else if (phase!=='idle' || !this.drag) this.clearTarget();
+      if (phase!==previous) {
+        const cue=({fuse:'fuse',scatter:'explosion',restore:'restore'})[phase];
+        if(cue) this.startSound(cue,this.runSettings || this.settings);
+      }
     }
     showTarget(center) {
       this.targetPreview.style.left=`${center.x-39}px`;this.targetPreview.style.top=`${center.y-42}px`;
@@ -202,6 +208,8 @@
         }
       });
       this.syncHints();
+      if (this.settings.sound && this.shown && !this.destroyed) void this.soundPlayer.prepare().catch(()=>{});
+      else this.soundPlayer.stopAll();
     }
     syncHints() {
       const shown=this.settings.showHints;
@@ -240,7 +248,6 @@
       const epoch = ++this.epoch, settings = {...this.settings};
       this.detonationCenter={x:center.x,y:center.y};
       this.dock.hidden=true;this.panel.hidden=true;this.runSettings=settings;this.setPhase('fuse');
-      this.startSound('fuse',settings);
       this.fuseTimer = setTimeout(() => this.explode(epoch,settings),settings.fuseMs);
     }
     collectRegions(radius) {
@@ -299,9 +306,8 @@
           onPhase:phase=>{if(epoch===this.epoch&&!this.destroyed) this.setPhase(phase);},
           onComplete:()=>{if(epoch===this.epoch&&!this.destroyed) this.restore();}
         });
-        // start() prepares its caches before entering scatter and painting the flash.
-        // Keep the target primed until that synchronous first-frame handoff.
-        if (epoch===this.epoch && !this.destroyed) this.startSound('explosion',settings);
+        // Phase callbacks trigger the blast/return cues after caches are ready.
+        // Audio never uses a wall-clock timer to guess when the screenshot is ready.
       } catch(error) {
         if (epoch===this.epoch && !this.destroyed) {this.restore();this.toast(error.message || '无法播放爆炸，请重新启用插件。');}
       } finally {
@@ -310,29 +316,20 @@
       }
     }
     startSound(kind,settings) {
-      if (!settings.sound) return;
+      if (!this.settings.sound || this.destroyed || !this.shown) return;
+      const center=this.detonationCenter || {x:this.x,y:this.y};
       try {
-        if (!this.audio) this.audio=new (window.AudioContext||window.webkitAudioContext)();
-        const audio=this.audio;audio.resume().catch(()=>{});
-        const duration=kind==='fuse'?settings.fuseMs/1000:.7;
-        const now=audio.currentTime, gain=audio.createGain();
-        const filter=audio.createBiquadFilter();filter.type='lowpass';filter.frequency.value=kind==='fuse'?2600:900;
-        const buffer=audio.createBuffer(1,Math.ceil(audio.sampleRate*duration),audio.sampleRate);
-        const samples=buffer.getChannelData(0);for(let i=0;i<samples.length;i++) samples[i]=(Math.random()*2-1)*(kind==='fuse'?.025:.18);
-        const source=audio.createBufferSource();source.buffer=buffer;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);
-        gain.gain.setValueAtTime(1,now);gain.gain.exponentialRampToValueAtTime(.001,now+duration);source.start();source.stop(now+duration);
-        this.audioNodes.push(source);
-        source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();this.audioNodes=this.audioNodes.filter(n=>n!==source);};
-        if(kind==='explosion') {
-          const osc=audio.createOscillator(),sub=audio.createGain();osc.frequency.setValueAtTime(95,now);osc.frequency.exponentialRampToValueAtTime(24,now+.45);sub.gain.setValueAtTime(.14,now);sub.gain.exponentialRampToValueAtTime(.001,now+.45);osc.connect(sub);sub.connect(audio.destination);osc.start();osc.stop(now+.5);this.audioNodes.push(osc);osc.onended=()=>{osc.disconnect();sub.disconnect();this.audioNodes=this.audioNodes.filter(n=>n!==osc);};
-        }
-      } catch { /* Audio is optional; rendering remains available. */ }
+        void this.soundPlayer.play(kind,{
+          fuseMs:settings.fuseMs,restoreMs:settings.restoreMs,strength:settings.strength,
+          pan:clamp((center.x/Math.max(1,innerWidth)*2-1)*.55,-.55,.55)
+        }).catch(()=>{});
+      } catch { /* Audio failure must never interrupt the visual effect. */ }
     }
     restore() {
       ++this.epoch;clearTimeout(this.fuseTimer);
       const drag=this.drag;this.drag=null;this.detonationCenter=null;this.clearTarget();
       if(drag && this.button.hasPointerCapture(drag.id)) this.button.releasePointerCapture(drag.id);
-      this.engine.stop();this.audioNodes.forEach(n=>{try{n.stop();}catch{}});this.audioNodes=[];
+      this.engine.stop();this.soundPlayer.stopAll();this.runSettings=null;
       this.host.style.removeProperty('visibility');this.host.style.removeProperty('opacity');this.host.dataset.capture='none';this.setPhase('idle');
       this.host.style.setProperty('display',this.shown?'block':'none','important');
       this.position();
@@ -349,7 +346,7 @@
       ++this.backgroundEpoch;this.backgroundBitmap?.close();this.backgroundBitmap=null;this.backgroundAsset=null;
       clearTimeout(this.toastTimer);clearTimeout(this.saveTimer);
       chrome.runtime.onMessage.removeListener(this.messageListener);chrome.storage.onChanged.removeListener(this.storageListener);
-      this.audio?.close().catch(()=>{});this.host.remove();delete window.__TNTController;
+      void this.soundPlayer.close().catch(()=>{});this.host.remove();delete window.__TNTController;
     }
   }
   window.__TNTController=new TNTController();

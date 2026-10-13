@@ -67,7 +67,7 @@ html{background:#faf4e0}body{margin:0;font-family:sans-serif;min-height:2100px;c
   const send=message=>worker.evaluate(({id,message})=>chrome.tabs.sendMessage(id,message),{id:tabId,message});
   let popup;
   if(report.fixturePermission){
-    await worker.evaluate(id=>chrome.scripting.executeScript({target:{tabId:id},files:['settings.js','background-image.js','engine.js','content.js']}),tabId);
+    await worker.evaluate(id=>chrome.scripting.executeScript({target:{tabId:id},files:['settings.js','background-image.js','engine.js','audio.js','content.js']}),tabId);
     popup=await context.newPage();await popup.goto(`chrome-extension://${extensionId}/popup.html`);
   }else{
     try{

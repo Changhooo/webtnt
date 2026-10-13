@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TNT · 网页爆破",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "拖动像素 TNT，炸开附近网页画面，短暂停留后快速复原。所有效果在本机完成。",
   "minimum_chrome_version": "109",
   "permissions": [
@@ -31,7 +31,11 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "assets/tnt.svg"
+        "assets/tnt.svg",
+        "assets/audio/ignite.wav",
+        "assets/audio/fuse.wav",
+        "assets/audio/blast.wav",
+        "assets/audio/restore.wav"
       ],
       "matches": [
         "<all_urls>"

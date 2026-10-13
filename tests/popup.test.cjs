@@ -186,7 +186,7 @@ test('SHOW installs scripts once when the content receiver is missing and action
   await ui.action('TNT_SHOW');
   assert.equal(ui.callsOf('scripting.executeScript').length, 1);
   assert.deepEqual(ui.callsOf('scripting.executeScript')[0].injection, {
-    target: { tabId: 17 }, files: ['settings.js', 'background-image.js', 'engine.js', 'content.js'],
+    target: { tabId: 17 }, files: ['settings.js', 'background-image.js', 'engine.js', 'audio.js', 'content.js'],
   });
   assert.match(ui.status, /TNT 已显示/);
   await ui.action('TNT_SHOW');
@@ -215,6 +215,13 @@ test('slider and sound changes persist immediately before deferred content synch
   assert.equal(ui.persisted.sound, true);
   await ui.runTimers();
   assert.equal(ui.callsOf('tabs.sendMessage').at(-1).message.settings.sound, true);
+  const reopened = await fixture(t, { receiving: true, stored: copy(ui.persisted) });
+  await reopened.ready();
+  assert.equal(reopened.document.getElementById('sound').checked, true, 'the real-use audio preference survives reopening the popup');
+  reopened.input('sound', false);
+  assert.equal(reopened.persisted.sound, false);
+  await reopened.runTimers();
+  assert.equal(reopened.callsOf('tabs.sendMessage').at(-1).message.settings.sound, false);
   ui.input('craterRatio', 0.4);
   assert.equal(ui.persisted.craterRatio, 0.4);
   assert.equal(ui.document.getElementById('craterRatioValue').textContent, '40 %');

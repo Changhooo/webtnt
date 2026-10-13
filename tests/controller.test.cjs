@@ -64,6 +64,17 @@ async function setup(configuration = {}) {
     }},onChanged:event(storageListeners)}
   };
   let time=0, id=0;
+  const audioCalls=[],audioPlayers=[];
+  // Real controller phase transitions are exercised below. The separate audio
+  // suite verifies decoding and Web Audio nodes; this spy records their handoff.
+  class AudioPlayerSpy {
+    constructor(options){this.options=options;audioPlayers.push(this);}
+    record(type,kind,options){audioCalls.push({type,kind,options:options&&{...options},time,phase:window.__TNTController?.phase});}
+    prepare(){this.record('prepare');return Promise.resolve();}
+    play(kind,options){this.record('play',kind,options);return Promise.resolve();}
+    stopAll(){this.record('stopAll');}
+    close(){this.record('close');return Promise.resolve();}
+  }
   const timers=new Map(), frames=new Map();
   Object.defineProperty(window.performance,'now',{value:()=>time,configurable:true});
   window.setTimeout=(fn,ms=0)=>{const key=++id;timers.set(key,{fn,at:time+ms});return key;};
@@ -119,7 +130,9 @@ async function setup(configuration = {}) {
     const active=[...frames];frames.clear();for(const [,fn] of active) fn(time);
     await flush();
   };
-  for(const file of ['settings.js','background-image.js','engine.js','content.js']) window.eval(fs.readFileSync(path.join(extension,file),'utf8'));
+  for(const file of ['settings.js','background-image.js','engine.js','audio.js']) window.eval(fs.readFileSync(path.join(extension,file),'utf8'));
+  window.TNTAudio={...window.TNTAudio,Player:AudioPlayerSpy};
+  window.eval(fs.readFileSync(path.join(extension,'content.js'),'utf8'));
   await flush();
   const controller=window.__TNTController;
   const message=payload=>new Promise(resolve=>{
@@ -132,7 +145,7 @@ async function setup(configuration = {}) {
   const finishFuse=async()=>{await advance(controller.settings.fuseMs);await advance(16);await advance(16);await until(()=>controller.phase!=='capture');assert.equal(controller.phase,'scatter',controller.shadow.querySelector('.toast').textContent);};
   const igniteToScatter=async()=>{click();assert.equal(controller.phase,'fuse');await finishFuse();};
   const alphaSum=()=>{const data=nativeFor(controller.canvas).getContext('2d').getImageData(0,0,1000,700).data;let total=0;for(let i=3;i<data.length;i+=4)total+=data[i];return total;};
-  return {window,document,controller,message,pointer,click,advance,flush,until,finishFuse,igniteToScatter,alphaSum,timers,frames,runtimeListeners,storageListeners,storage,backgroundBitmaps,backgroundWaiters,captureDecodeWaiters,
+  return {window,document,controller,message,pointer,click,advance,flush,until,finishFuse,igniteToScatter,alphaSum,timers,frames,runtimeListeners,storageListeners,storage,backgroundBitmaps,backgroundWaiters,captureDecodeWaiters,audioCalls,audioPlayers,
     get captureCalls(){return captureCalls;},get bitmapClosed(){return bitmapClosed;},set captureMode(mode){captureMode=mode;},resolveCapture:()=>captureResolver({ok:true,dataURL:captureURL}),
     set backgroundDecodeMode(mode){backgroundDecodeMode=mode;},resolveBackground:async index=>{backgroundWaiters[index||0]();await flush();},
     resolveCaptureDecode:async()=>{captureDecodeWaiters.shift()();await flush();},
@@ -364,4 +377,102 @@ test('dock and panel hint controls persist and synchronize controllers without i
     assertVisibility(reinstalled,true);assertVisibility(other.controller,true);
     reinstalled.destroy();
   }finally{await q.close();await other.close();}
+});
+
+test('sound remains opt-in and a muted complete shot never starts an audio cue',async()=>{
+  const q=await setup();try{
+    assert.equal(q.controller.settings.sound,false);
+    await q.igniteToScatter();await q.advance(1000);await q.advance(2500);await q.advance(350);
+    assert.equal(q.controller.phase,'idle');
+    assert.deepEqual(q.audioCalls.filter(call=>call.type==='play'),[],'default settings must remain silent through every animation phase');
+  }finally{await q.close();}
+});
+
+test('enabled sound follows the actual fuse, scatter and restore phases with custom timings',async()=>{
+  for(const settings of [
+    {sound:true},
+    {sound:true,fuseMs:1700,scatterMs:1300,holdMs:900,restoreMs:700,strength:1.6},
+  ]){
+    const q=await setup({settings});try{
+      const c=q.controller,fixed={x:c.x,y:c.y,left:c.button.style.left,top:c.button.style.top};
+      const plays=()=>q.audioCalls.filter(call=>call.type==='play');
+      assert.equal(q.audioPlayers.length,1);
+      assert.equal(q.audioPlayers[0].options.resolveURL('fuse.wav'),'https://fixture.test/assets/audio/fuse.wav','bundled cues resolve through the extension runtime');
+      assert.ok(q.audioCalls.some(call=>call.type==='prepare'),'enabling the setting prepares the local audio assets');
+      q.pointer('pointerdown',c.x,c.y);q.pointer('pointermove',820,320);
+      assert.equal(plays().length,0,'dragging alone never plays the ignition cue');
+      q.pointer('pointerup',820,320);
+      assert.deepEqual(plays().map(call=>[call.kind,call.phase]),[['fuse','fuse']]);
+      assert.equal(plays()[0].options.fuseMs,c.settings.fuseMs);
+      assert.equal(plays()[0].options.restoreMs,c.settings.restoreMs);
+      assert.equal(plays()[0].options.strength,c.settings.strength);
+      assert.ok(plays()[0].options.pan>0,'audio follows the actual right-side drop point');
+      await q.advance(c.settings.fuseMs-1);assert.equal(c.phase,'fuse');assert.equal(plays().length,1);
+      await q.advance(1);await q.advance(16);await q.advance(16);await q.until(()=>c.phase==='scatter');
+      assert.deepEqual(plays().map(call=>[call.kind,call.phase]),[['fuse','fuse'],['explosion','scatter']]);
+      assert.deepEqual({x:c.engine.options.center.x,y:c.engine.options.center.y},{x:820,y:320},'the sound source and visual blast retain the drop coordinates');
+      const started=c.engine.startedAt;
+      await q.advance(c.settings.scatterMs);assert.equal(c.phase,'hold');assert.equal(plays().length,2,'the lingering destruction has no extra cue');
+      await q.advance(c.settings.holdMs-1);assert.equal(c.phase,'hold');assert.equal(plays().length,2,'restore audio cannot use a fixed elapsed-second timer');
+      await q.advance(1);assert.equal(c.phase,'restore');
+      assert.deepEqual(plays().map(call=>[call.kind,call.phase]),[['fuse','fuse'],['explosion','scatter'],['restore','restore']]);
+      assert.equal(plays()[2].time,started+c.settings.scatterMs+c.settings.holdMs);
+      await q.advance(50);assert.equal(c.phase,'restore');assert.equal(plays().length,3,'subsequent restore frames do not restart its cue');
+      const stopped=q.audioCalls.filter(call=>call.type==='stopAll').length;
+      await q.advance(c.settings.restoreMs-50);assert.equal(c.phase,'idle');
+      assert.ok(q.audioCalls.filter(call=>call.type==='stopAll').length>stopped,'natural completion stops all remaining audio');
+      assert.deepEqual({x:c.x,y:c.y,left:c.button.style.left,top:c.button.style.top},fixed,'audio integration preserves the fixed TNT position');
+    }finally{await q.close();}
+  }
+});
+
+test('delayed capture and decoding cannot play the explosion before the first scatter frame',async()=>{
+  const q=await setup({settings:{sound:true},captureDecode:'deferred'});try{
+    const c=q.controller,plays=()=>q.audioCalls.filter(call=>call.type==='play');
+    q.captureMode='deferred';q.click();await q.advance(800);await q.advance(16);await q.advance(16);
+    assert.equal(c.phase,'capture');assert.deepEqual(plays().map(call=>call.kind),['fuse']);
+    await q.advance(1100);assert.equal(c.phase,'capture');assert.equal(plays().length,1,'a slow capture does not trigger a wall-clock explosion');
+    q.resolveCapture();await q.until(()=>q.captureDecodeWaiters.length===1);
+    await q.advance(1300);assert.equal(c.phase,'capture');assert.equal(plays().length,1,'a slow decoder does not play the explosion early');
+    await q.resolveCaptureDecode();await q.until(()=>c.phase==='scatter');
+    assert.deepEqual(plays().map(call=>[call.kind,call.phase]),[['fuse','fuse'],['explosion','scatter']]);
+    c.restore();assert.equal(c.phase,'idle');assert.ok(q.audioCalls.at(-1).type==='stopAll');
+  }finally{await q.close();}
+});
+
+test('turning sound off stops immediately and suppresses later cues without stopping the visual shot',async()=>{
+  for(const phase of ['fuse','scatter','restore']){
+    const q=await setup({settings:{sound:true}});try{
+      const c=q.controller;q.click();
+      if(phase!=='fuse')await q.finishFuse();
+      if(phase==='restore'){await q.advance(1000);await q.advance(2500);}
+      assert.equal(c.phase,phase);
+      const played=q.audioCalls.filter(call=>call.type==='play').length;
+      await q.message({type:'TNT_SETTINGS',settings:{...c.settings,sound:false}});
+      assert.equal(c.phase,phase,'changing audio preference does not cancel the visual effect');
+      assert.equal(q.audioCalls.at(-1).type,'stopAll','the audio switch must stop the current sound immediately');
+      if(phase==='fuse')await q.finishFuse();
+      await q.advance(5000);assert.equal(c.phase,'idle');
+      assert.equal(q.audioCalls.filter(call=>call.type==='play').length,played,'a snapshot of the original settings cannot revive later audio');
+    }finally{await q.close();}
+  }
+});
+
+test('cancel, hide and destroy stop current audio and discard later pending capture work',async()=>{
+  for(const action of ['cancel','hide','destroy']){
+    const q=await setup({settings:{sound:true},captureDecode:'deferred'});try{
+      const c=q.controller;q.click();await q.advance(800);await q.advance(16);await q.advance(16);
+      await q.until(()=>q.captureDecodeWaiters.length===1);assert.equal(c.phase,'capture');
+      const played=q.audioCalls.filter(call=>call.type==='play').length;
+      const stopped=q.audioCalls.filter(call=>call.type==='stopAll').length;
+      if(action==='cancel')q.document.dispatchEvent(new q.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+      else if(action==='hide')c.hide();
+      else c.destroy();
+      assert.ok(q.audioCalls.filter(call=>call.type==='stopAll').length>stopped,`${action} stops audio synchronously`);
+      if(action==='destroy')assert.equal(q.audioCalls.at(-1).type,'close','destroy releases the audio player');
+      await q.resolveCaptureDecode();await q.until(()=>q.bitmapClosed===1);await q.advance(5000);
+      assert.equal(c.phase,'idle');assert.equal(c.engine.running,false);
+      assert.equal(q.audioCalls.filter(call=>call.type==='play').length,played,'a cancelled decode cannot start explosion or restore audio');
+    }finally{await q.close();}
+  }
 });
