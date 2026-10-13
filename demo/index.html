@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>界面爆破实验室 · TNT Blast</title>
+  <link rel="stylesheet" href="demo.css">
+  <script src="demo.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="界面爆破实验室首页"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>界面爆破实验室<span class="brand-sub">TNT BLAST / TEST FIELD</span></a>
+    <nav aria-label="页面区域"><a href="#interaction">交互区</a><a href="#gallery">图片区</a><a href="#live">实时区</a></nav>
+    <span class="header-label"><span class="status-dot"></span>页面正在运行</span>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">EXPERIMENT 001 · 普通网页测试场</p>
+        <h1 id="page-title">把这一页，<br>当作<span>爆破实验场。</span></h1>
+        <p class="hero-description">文字、图像、按钮与动态画面，等待一次冲击。<br>页面继续运行，碎片归位后，时间也继续向前。</p>
+        <div class="hero-tags"><span>文字与图像</span><span>原生表单</span><span>动态画面</span><span>嵌入页面</span></div>
+      </div>
+      <aside class="launch-card" aria-label="插件使用提示">
+        <div class="launch-head"><span class="number">01</span><span class="tiny-label">HOW TO BEGIN</span></div>
+        <h2>右键移动图标，<br>左键选择爆心。</h2>
+        <ol><li>点击工具栏 TNT 图标，选择“显示 TNT”。</li><li>右键拖动，调整固定图标的位置。</li><li>左键拖出目标预览，松开在鼠标落点点燃。</li></ol>
+        <p><kbd>Esc</kbd> 立即复原 · 右键 TNT 打开菜单</p>
+        <div class="launch-note">固定图标全程留在原位。点击悬浮工具栏“文”可隐藏下方文字；目标预览没有虚线矩形框。效果由安装后的扩展提供。</div>
+      </aside>
+      <div class="hero-coordinate" aria-hidden="true">FIELD / 250 PX DEFAULT RADIUS</div>
+    </section>
+
+    <section class="section-heading" id="interaction"><div><p class="eyebrow">01 / INTERACTION</p><h2>界面还在工作</h2></div><p>在这里输入、点击，再检查爆炸后是否保持原来的状态。</p></section>
+    <div class="interaction-grid">
+      <article class="card note-card">
+        <div class="card-top"><span class="card-index">A</span><span class="tiny-label">原生输入控件</span><span class="small-tag">可编辑</span></div>
+        <label for="note">写下你的观察</label>
+        <textarea id="note" rows="3" placeholder="例如：先输入一行文字，再左键拖出目标到旁边。">碎片飞出去，文字还在这里。</textarea>
+        <div class="form-row"><label for="scene">当前测试</label><select id="scene"><option>文字与表单</option><option>图片与按钮</option><option>动态内容与 iframe</option></select></div>
+        <div class="note-footer"><span id="note-count" aria-live="polite">14 个字符</span><span>内容不离开当前页面</span></div>
+      </article>
+      <article class="card counter-card">
+        <div class="card-top"><span class="card-index">B</span><span class="tiny-label">可点击按钮</span><span class="small-tag">可操作</span></div>
+        <h3>每一次点击，都算数。</h3>
+        <div class="counter-number" id="counter-value" aria-live="polite">00<span>次</span></div>
+        <div class="button-row"><button class="button-primary" id="counter-add">增加一次 <span aria-hidden="true">↗</span></button><button class="button-secondary" id="counter-reset">归零</button></div>
+        <p class="card-hint">爆炸遮罩以外的控件仍可正常点击。</p>
+      </article>
+      <article class="card clock-card">
+        <div class="card-top"><span class="card-index">C</span><span class="tiny-label">实时更新内容</span><span class="small-tag live-tag"><span class="status-dot"></span>LIVE</span></div>
+        <h3>时间持续流动</h3>
+        <div class="clock-value" id="clock-value">00:00:00</div>
+        <div class="elapsed-value">本页已运行 <strong id="elapsed-value">0.0</strong> 秒</div>
+        <div class="time-rail" aria-hidden="true"><span id="time-rail-fill"></span></div>
+        <p class="card-hint">复原后，应该看到此刻的时间。</p>
+      </article>
+    </div>
+
+    <section class="section-heading" id="gallery"><div><p class="eyebrow">02 / SCENERY</p><h2>给碎片一点颜色</h2></div><p>本页图像由本地 SVG 绘制，无需外部图片资源。</p></section>
+    <div class="gallery-grid">
+      <article class="art-card">
+        <svg class="artwork" viewBox="0 0 600 340" role="img" aria-label="夕阳下的建筑与街道插画">
+          <defs><linearGradient id="city-sky" x2="0" y2="1"><stop stop-color="#ffca9d"/><stop offset="1" stop-color="#f4e2c8"/></linearGradient></defs>
+          <path fill="url(#city-sky)" d="M0 0h600v340H0z"/><circle cx="442" cy="94" r="47" fill="#ff744c"/>
+          <path d="M0 229h600v111H0z" fill="#dbb3a2"/><path d="M316 231h52l107 109H209z" fill="#a67771"/>
+          <path d="M18 105h127v190H18z" fill="#b86350"/><path d="M18 105l51-24 130 23-54 24z" fill="#d07d61"/><path d="M145 105l54-1v169l-54 22z" fill="#87433f"/>
+          <path d="M234 135h101v115H234z" fill="#e8ad79"/><path d="M234 135l41-23 107 2-47 21z" fill="#f2c798"/><path d="M335 135l47-21v119l-47 17z" fill="#cc875f"/>
+          <path d="M414 168h155v107H414z" fill="#54625f"/><path d="M414 168l40-29 146 2-31 27z" fill="#6a7b71"/><path d="M569 168l31-27v114l-31 20z" fill="#3b4d4b"/>
+          <g fill="#f4d6a0"><path d="M37 133h22v24H37zm41 0h22v24H78zm-41 41h22v24H37zm41 0h22v24H78zm-41 41h22v24H37zm41 0h22v24H78z"/><path d="M438 189h28v23h-28zm49 0h28v23h-28zm49 0h19v23h-19z"/></g>
+          <g fill="#9b6550"><path d="M251 157h18v23h-18zm38 0h18v23h-18zm-38 38h18v23h-18zm38 0h18v23h-18z"/></g>
+          <path d="M0 305h600v35H0z" fill="#67544f"/><path d="M338 267l9 18m16 17 17 25" stroke="#f8d9ac" stroke-width="5"/>
+          <path d="M193 199v98m-13-79h26" stroke="#4b5551" stroke-width="8"/><circle cx="193" cy="192" r="15" fill="#f4d59b"/><path d="M173 294h40" stroke="#4b5551" stroke-width="8"/>
+          <g fill="#758376"><circle cx="552" cy="265" r="22"/><circle cx="576" cy="268" r="18"/></g><path d="M568 272v39" stroke="#47574b" stroke-width="6"/>
+        </svg>
+        <div class="art-description"><div><p class="tiny-label">LOCAL VECTOR / 001</p><h3>街角，日落之前</h3></div><span class="art-arrow" aria-hidden="true">↗</span></div>
+      </article>
+      <article class="art-card">
+        <svg class="artwork" viewBox="0 0 600 340" role="img" aria-label="月光下的山峰与湖泊插画">
+          <defs><linearGradient id="night-sky" x2="0" y2="1"><stop stop-color="#192532"/><stop offset="1" stop-color="#56616b"/></linearGradient><linearGradient id="lake" x2="0" y2="1"><stop stop-color="#4c7882"/><stop offset="1" stop-color="#1f4657"/></linearGradient></defs>
+          <path fill="url(#night-sky)" d="M0 0h600v340H0z"/><circle cx="451" cy="76" r="32" fill="#f3e6bd"/>
+          <g fill="#dfdabc"><circle cx="60" cy="48" r="2"/><circle cx="116" cy="81" r="2"/><circle cx="221" cy="37" r="2"/><circle cx="310" cy="68" r="1.5"/><circle cx="526" cy="40" r="1.5"/><circle cx="570" cy="103" r="2"/></g>
+          <path d="M-30 221 125 72l118 149z" fill="#65848d"/><path d="m125 72 54 81-46-18-22 17-28-15z" fill="#d5d8cb"/>
+          <path d="m152 246 167-155 169 155z" fill="#426777"/><path d="m319 91 67 91-51-22-25 22-28-10-24 13z" fill="#bacbc7"/>
+          <path d="m365 225 135-83 149 83z" fill="#2d5665"/><path d="M0 225h600v115H0z" fill="url(#lake)"/>
+          <path d="M397 247h107m-87 16h69m-87 21h108m-67 21h36" stroke="#bcbfa9" stroke-width="2" opacity=".6"/>
+          <path d="M0 229 117 248 197 303 171 340H0z" fill="#263c3f"/><path d="m600 236-84 18-25 27 34 59h75z" fill="#243b3f"/>
+          <g fill="#1b3034"><path d="m41 135-25 80h14l-23 37h66l-23-37h16zm43 55-20 59h12l-20 34h57l-18-34h10zm471-48-30 90h16l-26 48h83l-29-48h16z"/></g>
+          <path d="m191 280 42 5-16 8h-27z" fill="#f2b166"/><path d="M211 283v-20l20 20z" fill="#ddd6bd"/><path d="M182 300h56" stroke="#638c8e" stroke-width="2"/>
+        </svg>
+        <div class="art-description"><div><p class="tiny-label">LOCAL VECTOR / 002</p><h3>湖面，时间静止</h3></div><span class="art-arrow" aria-hidden="true">↗</span></div>
+      </article>
+    </div>
+
+    <section class="section-heading" id="live"><div><p class="eyebrow">03 / LIVE SURFACES</p><h2>画面从未暂停</h2></div><p>Canvas 与嵌入页持续更新，用于检查截图碎片与实时复原。</p></section>
+    <div class="live-grid">
+      <article class="card canvas-card"><div class="card-top"><span class="card-index">D</span><span class="tiny-label">Canvas 动画</span><span class="small-tag live-tag"><span class="status-dot"></span>LIVE</span></div><canvas id="live-canvas" width="620" height="260" aria-label="持续移动的波形与光点"></canvas><div class="canvas-footer"><span>信号持续更新</span><span id="canvas-frame">FRAME 0000</span></div></article>
+      <article class="card embed-card"><div class="card-top"><span class="card-index">E</span><span class="tiny-label">同源 iframe</span><span class="small-tag">嵌入内容</span></div><iframe src="embedded.html" title="同源嵌入测试页面" loading="lazy"></iframe><p class="card-hint">通过本地 HTTP 服务打开时，与主页面同源。</p></article>
+    </div>
+    <div class="extras-grid">
+      <article class="card opaque-card"><div class="card-top"><span class="card-index">F</span><span class="tiny-label">隔离 iframe</span><span class="small-tag">SANDBOX</span></div><iframe src="embedded.html?mode=opaque" sandbox="allow-scripts" title="不透明源 iframe 测试页面" loading="lazy"></iframe><p class="card-hint">未授予 allow-same-origin，用于检查无法读取内部 DOM 的嵌入画面。</p></article>
+      <article class="card media-card"><div class="card-top"><span class="card-index">G</span><span class="tiny-label">本地视频</span><span class="small-tag">循环播放</span></div><video class="test-video" src="test-pattern.webm" autoplay muted loop playsinline controls aria-label="本地动态测试视频"></video><p class="card-hint">本地四秒测试片段，无需网络。引爆前后可检查播放进度和画面；受保护媒体、实际视频网站与全屏需另行验收。</p></article>
+    </div>
+    <aside class="test-note"><span class="note-symbol" aria-hidden="true">+</span><p><strong>观察重点：</strong>左键把目标拖到图片区、输入框或时钟附近，固定图标应始终留在原位。外围裁边应连接网页、投影不拼成圆环；缺口裂纹与碎片阴影、厚度应完全复原。点击“文”检查各阶段提示开关，输入、计数、滚动位置和时间应保持。</p></aside>
+  </main>
+  <footer><span>界面爆破实验室 · TNT Blast v1.0.6</span><span>LOCAL TEST FIELD / NO EXTERNAL ASSETS</span><a href="#top">回到顶部 ↑</a></footer>
+</body>
+</html>

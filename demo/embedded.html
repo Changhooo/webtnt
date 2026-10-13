@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>嵌入画面测试</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#edf0e4;color:#57674e;font-family:"Segoe UI","Microsoft YaHei",sans-serif;padding:20px;font-size:11px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}.badge{font:8px monospace;letter-spacing:1px;color:#91a078}.dot{width:6px;height:6px;display:inline-block;background:#8c9e57;border-radius:50%;margin-right:5px}h2{font-size:14px;margin:0;font-weight:600}.row{display:flex;align-items:center;gap:18px}.orbit{width:72px;height:72px;position:relative;flex-shrink:0;border:1px solid #bdcaaa;border-radius:50%}.orbit:before{content:"";position:absolute;inset:12px;border:1px dashed #c0caae;border-radius:50%}.planet{position:absolute;left:32px;top:32px;width:8px;height:8px;border-radius:50%;background:#899a56;box-shadow:0 0 0 6px #899a5614}.satellite{position:absolute;left:30px;top:30px;width:10px;height:10px;border-radius:3px;background:#657f63;transform-origin:5px 5px;animation:orbit 5s linear infinite}.time{font:24px ui-monospace,Consolas,monospace;letter-spacing:-1px}.hint{font-size:9px;color:#8c9b7b;margin:7px 0 0}@keyframes orbit{from{transform:rotate(0deg) translateX(31px) rotate(0deg)}to{transform:rotate(360deg) translateX(31px) rotate(-360deg)}}@media(prefers-reduced-motion:reduce){.satellite{animation:none}}
+  </style>
+</head>
+<body>
+  <div class="top"><h2 id="label">一个独立的小画面</h2><span class="badge"><span class="dot"></span>RUNNING</span></div>
+  <div class="row"><div class="orbit" aria-hidden="true"><span class="planet"></span><span class="satellite"></span></div><div><div class="time" id="time">00:00:00</div><p class="hint" id="hint">iframe 内部也在更新</p></div></div>
+  <script>
+    "use strict";
+    const isolated = new URLSearchParams(location.search).get("mode") === "opaque";
+    if (isolated) { document.getElementById("label").textContent = "隔离的嵌入画面"; document.getElementById("hint").textContent = "sandbox · 不透明源"; }
+    const refresh = () => { document.getElementById("time").textContent = new Date().toLocaleTimeString("zh-CN", {hour12:false}); };
+    refresh(); setInterval(refresh, 250);
+  </script>
+</body>
+</html>

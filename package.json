@@ -1,0 +1,37 @@
+{
+  "name": "tnt-page-blast",
+  "version": "1.0.6",
+  "private": true,
+  "description": "Browser-first TNT overlay with a portable screenshot fragment renderer",
+  "scripts": {
+    "test": "node --test tests/engine.test.cjs tests/background.test.cjs tests/settings.test.cjs tests/controller.test.cjs tests/popup.test.cjs tests/visual.test.cjs tests/distribution.test.cjs tests/background-image.test.cjs",
+    "test:browser": "node tests/browser.test.cjs",
+    "demo": "python -m http.server 8765"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^0.1.80",
+    "happy-dom": "^20.0.0",
+    "playwright": "^1.58.0",
+    "pngjs": "^7.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Changhooo/webtnt.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Changhooo/webtnt/issues"
+  },
+  "homepage": "https://github.com/Changhooo/webtnt#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "chrome-extension",
+    "edge-extension",
+    "tnt",
+    "canvas",
+    "animation",
+    "manifest-v3"
+  ]
+}

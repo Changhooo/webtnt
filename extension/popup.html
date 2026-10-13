@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TNT · 网页爆破</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <div class="brand-icon"><img src="assets/tnt.svg" alt="" width="63" height="63"></div>
+      <div class="brand-copy"><div class="eyebrow">A LITTLE CHAOS</div><h1>TNT <span>/ 网页爆破</span></h1><p>把这一页，炸成碎片。</p></div>
+      <span class="version">01</span>
+    </header>
+
+    <section class="console" aria-label="操作">
+      <div class="console-top"><span class="ready"><i id="readyDot" data-state="idle"></i><span id="readyText">准备就绪</span></span><span class="shortcut">右键移动 TNT · 左键选择爆点</span></div>
+      <button id="showButton" class="primary" type="button" data-action="TNT_SHOW"><span class="button-cube" aria-hidden="true">✦</span><span>显示 TNT</span><span class="arrow" aria-hidden="true">↗</span></button>
+      <div class="secondary-actions"><button type="button" data-action="TNT_HIDE">隐藏</button><button type="button" data-action="TNT_RESTORE">立即还原</button><button type="button" data-action="TNT_DESTROY">关闭工具</button></div>
+      <button id="showHints" class="hint-toggle" type="button" aria-pressed="false" disabled>隐藏图标下方文字</button>
+      <p id="status" role="status" aria-live="polite">仅右键拖动可移动 TNT；左键拖动松开，在释放点爆炸，TNT 图标留在原位；单独右击打开菜单。</p>
+    </section>
+
+    <section class="controls" aria-labelledby="effectTitle">
+      <div class="section-label"><h2 id="effectTitle">爆破参数</h2><span>实时保存</span></div>
+      <label class="slider-row" for="radius"><span class="slider-heading"><span>影响范围</span><output for="radius" id="radiusValue">250 <small>px</small></output></span><input id="radius" type="range" min="100" max="450" step="10" value="250"><span class="range-ends"><span>局部</span><span>大范围</span></span></label>
+      <label class="slider-row" for="strength"><span class="slider-heading"><span>爆炸强度</span><output for="strength" id="strengthValue">1.00 <small>×</small></output></span><input id="strength" type="range" min="0.5" max="1.8" step="0.05" value="1"><span class="range-ends"><span>轻轻震动</span><span>猛烈炸飞</span></span></label>
+      <label class="slider-row" for="craterRatio"><span class="slider-heading"><span>缺口大小</span><output for="craterRatio" id="craterRatioValue">65 <small>%</small></output></span><input id="craterRatio" type="range" min="0.35" max="1" step="0.05" value="0.65"><span class="range-ends"><span>小缺口</span><span>完整范围</span></span><span class="control-caption">只调整爆炸后背景范围，保留飞散强度</span></label>
+      <div class="timing-header"><span>动画节奏</span><span id="totalTime">4.65 秒</span></div>
+      <div class="timeline" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="timing-grid">
+        <label class="compact-slider" for="fuseMs"><span>01 点燃<output for="fuseMs" id="fuseMsValue">0.80 s</output></span><input id="fuseMs" type="range" min="200" max="2000" step="50" value="800"></label>
+        <label class="compact-slider" for="scatterMs"><span>02 炸开<output for="scatterMs" id="scatterMsValue">1.00 s</output></span><input id="scatterMs" type="range" min="500" max="1800" step="50" value="1000"></label>
+        <label class="compact-slider" for="holdMs"><span>03 停留<output for="holdMs" id="holdMsValue">2.50 s</output></span><input id="holdMs" type="range" min="500" max="6000" step="100" value="2500"></label>
+        <label class="compact-slider" for="restoreMs"><span>04 复原<output for="restoreMs" id="restoreMsValue">0.35 s</output></span><input id="restoreMs" type="range" min="200" max="800" step="50" value="350"></label>
+      </div>
+      <label class="sound-row" for="sound"><span><strong>爆炸音效</strong><small>火花、低频冲击与碎片声</small></span><input id="sound" type="checkbox"><span class="switch" aria-hidden="true"></span></label>
+    </section>
+    <section class="background-section" aria-labelledby="backgroundTitle">
+      <div class="section-label"><h2 id="backgroundTitle">爆炸后的背景</h2><span>本机保存</span></div>
+      <div class="background-card">
+        <div id="backgroundPreview" class="background-preview"><span id="backgroundPlaceholder" aria-hidden="true">✦</span><img id="backgroundImage" alt="所选爆炸背景预览" hidden></div>
+        <div class="background-details"><strong id="backgroundName">默认深色背景</strong><span id="backgroundMeta">选择图片替换爆炸后的黑色缺口</span><div class="background-actions"><label id="backgroundChoose" class="file-button" for="backgroundFile">选择图片</label><button id="backgroundRemove" type="button" hidden>移除</button></div></div>
+      </div>
+      <input id="backgroundFile" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp">
+      <p class="background-note">JPEG／PNG／WEBP，最大 20 MB。仅保存在本机，不会上传。</p>
+      <p id="backgroundStatus" role="status" aria-live="polite"></p>
+    </section>
+    <footer><span>页面继续运行 · 自动快速复原</span><button id="resetButton" type="button">恢复默认</button></footer>
+  </main>
+  <script src="settings.js"></script>
+  <script src="background-image.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
